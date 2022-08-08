@@ -68,7 +68,6 @@ class Users extends \yii\db\ActiveRecord
 
         $n = str_replace(' ', '_', $name);
         $apiData = json_decode(file_get_contents("http://tel.snhrs.ru/index.php/api/index?search=$n&fullfio=1"));
-        $apiDataConsalt = json_decode(file_get_contents("http://phone.a-consalt.ru/index.php/api/index?search=$n&fullfio=1"));
         if ($apiData->status){
             foreach ($apiData->data as $datum) {
                 $phone = self::trim($datum->in);
@@ -76,14 +75,7 @@ class Users extends \yii\db\ActiveRecord
                 $post = self::trim($datum->dolzhnost);
                 $depart = self::trim($datum->depart);
             }
-        }elseif($apiDataConsalt->status){
-            foreach ($apiDataConsalt->data as $datum) {
-                $phone = self::trim($datum->in);
-                $phone .= self::trim($datum->out) ? '/'. self::trim($datum->out) : '';
-                $post = self::trim($datum->dolzhnost);
-                $depart = self::trim($datum->depart);
-            }
-        } else{
+        }else{
             $phone = null;
         }
 
@@ -101,7 +93,6 @@ class Users extends \yii\db\ActiveRecord
             $model->phone = $phone;
             $model->save();
         }else{
-
             $model = new Users();
             $model->post = Dolzh::getId($post) ? Dolzh::getId($post) : null;
             $model->fio =  Fio::getId($name);
@@ -118,10 +109,7 @@ class Users extends \yii\db\ActiveRecord
             }else{
 
             }
-
-
         }
-
     }
 
 
@@ -164,32 +152,9 @@ class Users extends \yii\db\ActiveRecord
 
     public function getIdFio($name){
         $login = str_replace("\\\\", "\\", $name);
-//        var_dump($name_once);
-//        $login = $name_once[0].'\\'.$name_once[1];
-//        return Users::find()->where(['login' => $login])->one()->id_user;
         Users::Ldap($login);
 
-
         return Users::find()->where(['login' => $login])->one()->id_user;
-
-//        $host_query = Users::find()->where(['login' => $login]);
-//        $count = $host_query->count();
-//
-//        if(!$host_query->exists()){
-//            $new_host = new Users();
-//            $new_host->login = $login;
-//            $new_host->post = (string)Dolzh::getId('');
-//            $new_host->fio =  (string)Fio::getId('');
-//            $new_host->depart =  (string)Depart::getId('');
-//            $new_host->save();
-//        }
-//
-//        $name = $host_query->one();
-//        print_r (Users::find()->where(['login' => $login])); die();
-
-
-
-//        return $name->id_user;
     }
 
     public function Ldap($login){
@@ -214,7 +179,6 @@ class Users extends \yii\db\ActiveRecord
 
         $userLogin = $lg[1];
 
-//        $srv_login = "user@snhrs.ru";
         $srv_password = "321qweR";
         $filter = "(&(objectCategory=user)(sAMAccountName=".$userLogin.")(!(userAccountControl:1.2.840.113556.1.4.803:=2)))";
         $attr = array("cn","mail","title","department","description");
@@ -232,8 +196,6 @@ class Users extends \yii\db\ActiveRecord
         }
 
         $str = explode('OU', $result_entries[0]['dn']);
-//        print_r($str);
-//        echo "<br>";
         $po = array("Завод строительных материалов и конструкций,", "Салаватнефтехимремстрой,");
         $replace = array(",", "=", "/", "\\", ".", "_");
         $s1 =  str_replace($replace, "", preg_replace("/[a-zA-Z]/i", "", $str[1]));
@@ -245,15 +207,9 @@ class Users extends \yii\db\ActiveRecord
         $str.= strlen($s2) > 0 ? $s2.', ' : '';
         $str.= strlen($s1) > 0 ? $s1.', ' : '';
         $depart = str_replace($po , "", substr($str, 0,-2));
-//        echo $depart;
-
 
         for ($i=0;$i<$result_entries['count'];$i++) {
             $post = isset($result_entries[$i]['description'][0]) ? $result_entries[$i]['description'][0] : '';
-//            echo $login; echo "<br>";
-//            echo $post; echo "<br>";
-//            echo $result_entries[$i]['cn'][0];  echo "<br>";
-//            echo $depart;   echo "<br>";
 //            die();
             Users::comparisonPostNameOne($login, $post , $result_entries[$i]['cn'][0], $depart);
         }
