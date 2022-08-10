@@ -67,7 +67,7 @@ class Users extends \yii\db\ActiveRecord
     public function comparisonPostNameOne($login, $post, $name, $depart){
 
         $n = str_replace(' ', '_', $name);
-        $apiData = json_decode(file_get_contents("http://tel.snhrs.ru/index.php/api/index?search=$n&fullfio=1"));
+        $apiData = json_decode(file_get_contents("http://tel.nhrs.ru/api/index?search=$n&fullfio=1"));
         if ($apiData->status){
             foreach ($apiData->data as $datum) {
                 $phone = self::trim($datum->in);
