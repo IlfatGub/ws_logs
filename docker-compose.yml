@@ -13,13 +13,13 @@ services:
       target: /etc/nginx/conf.d/default.conf
     volumes:
       - type: volume
-        source: sirias_public
-        target: /var/www/html/public
-      - type: volume
-        source: sirias_logs
-        target: /var/log/nginx
-    depends_on:
-      -  php-fpm
+        source: logs_public
+        target: /var/www/html
+      # - type: volume
+      #   source: sirias_logs
+      #   target: /var/log/nginx
+    networks:
+      - traefik-public
     deploy:
       mode: replicated
       replicas: 3
@@ -27,6 +27,14 @@ services:
         constraints: [node.role == worker]
       restart_policy: 
         condition: on-failure
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.logs.rule=Host(`logs.snhrs.ru`)"
+        - "traefik.http.services.logs.loadbalancer.server.port=80" 
+        - "traefik.http.services.logs.loadbalancer.sticky=true"
+        - "traefik.http.services.logs.loadbalancer.sticky.cookie.name=logs"
+        - "traefik.http.routers.logs.entrypoints=web"
+        - "traefik.docker.network=traefik-public"
 
   php-fpm:
     image: ilfatgub/php-fpm:7.2_ldap
@@ -40,8 +48,10 @@ services:
         target: /usr/local/etc/php/conf.d/custom.ini
     volumes:
       - type: volume
-        source: sirias_public
-        target: /var/www/html/public
+        source: logs_public
+        target: /var/www/html
+    networks:
+      - traefik-public
     deploy:
       mode: replicated
       replicas: 3
@@ -58,13 +68,13 @@ configs:
     external: true
 
 volumes:
-  sirias_public:
+  logs_public:
     driver_opts:
       type: nfs
       o: addr=172.17.82.26,rw,nolock
-      device: ":/var/www/html/logs.nhrs.ru/public"
-  sirias_logs:
-    driver_opts:
-      type: nfs
-      o: addr=172.17.82.26,rw,nolock
-      device: ":/var/www/html/logs.nhrs.ru/logs/nginx"
+      device: ":/var/www/html/logs.nhrs.ru"
+  # sirias_logs:
+  #   driver_opts:
+  #     type: nfs
+  #     o: addr=172.17.82.26,rw,nolock
+  #     device: ":/var/www/html/logs.nhrs.ru/logs/nginx"
