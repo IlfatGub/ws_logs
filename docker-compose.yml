@@ -15,14 +15,12 @@ services:
       - type: volume
         source: logs_public
         target: /var/www/html
-      # - type: volume
-      #   source: sirias_logs
-      #   target: /var/log/nginx
     networks:
       - traefik-public
+      - logs_network
     deploy:
       mode: replicated
-      replicas: 3
+      replicas: 2
       placement:
         constraints: [node.role == worker]
       restart_policy: 
@@ -46,15 +44,15 @@ services:
     configs:
       - source: php_ini
         target: /usr/local/etc/php/conf.d/custom.ini
+    networks:
+      - logs_network
     volumes:
       - type: volume
         source: logs_public
         target: /var/www/html
-    networks:
-      - traefik-public
     deploy:
       mode: replicated
-      replicas: 3
+      replicas: 2
       placement:
         constraints: [node.role == worker]
       restart_policy: 
@@ -73,11 +71,8 @@ volumes:
       type: nfs
       o: addr=172.17.82.26,rw,nolock
       device: ":/var/www/html/logs.nhrs.ru"
-  # sirias_logs:
-  #   driver_opts:
-  #     type: nfs
-  #     o: addr=172.17.82.26,rw,nolock
-  #     device: ":/var/www/html/logs.nhrs.ru/logs/nginx"
 networks:
   traefik-public:
     external: true
+  logs_network:
+    driver: overlay
