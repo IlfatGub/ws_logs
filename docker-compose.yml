@@ -78,3 +78,6 @@ volumes:
   #     type: nfs
   #     o: addr=172.17.82.26,rw,nolock
   #     device: ":/var/www/html/logs.nhrs.ru/logs/nginx"
+networks:
+  traefik-public:
+    external: true
