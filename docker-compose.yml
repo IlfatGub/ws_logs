@@ -46,6 +46,9 @@ services:
         target: /usr/local/etc/php/conf.d/custom.ini
     networks:
       - internal
+    extra_hosts:
+      - "logs.snhrs.ru:172.17.82.26"
+      - "tel.nhrs.ru:172.17.82.26"
     volumes:
       - type: volume
         source: files
